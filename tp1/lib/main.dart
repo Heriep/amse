@@ -128,42 +128,125 @@ class Page3 extends StatefulWidget {
   const Page3({super.key});
 
   @override
-   _Page3State createState() => _Page3State();
+  _Page3State createState() => _Page3State();
 }
 
 class _Page3State extends State<Page3> {
-  late Future<Map<String, dynamic>> _data;
+  late Future<List<dynamic>> _data;
+  int _challengeCount = 5;
+  List<bool> _expandedTiles = [];
 
   @override
   void initState() {
     super.initState();
-    _data = fetchData();
+    _data = fetchData(_challengeCount);
   }
 
-  Future<Map<String, dynamic>> fetchData() async {
-    final response = await http.get(Uri.parse('https://api.dofusdb.fr/almanax'));
+  Future<List<dynamic>> fetchData(int count) async {
+    final response = await http.get(Uri.parse('https://api.dofusdb.fr/challenges?\$skip=0&\$sort[slug.fr]=1&\$limit=50&categoryId[]=1&iconId[\$ne]=0&lang=fr'));
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      final data = json.decode(response.body);
+      _expandedTiles = List<bool>.filled(data['data'].length, false);
+      return data['data'].take(count).toList();
     } else {
       throw Exception('Failed to load data');
     }
   }
 
+  void _updateChallengeCount(double value) {
+    setState(() {
+      _challengeCount = value.toInt();
+      _data = fetchData(_challengeCount);
+    });
+  }
+
+  void _toggleTileExpansion(int index) {
+    setState(() {
+      _expandedTiles[index] = !_expandedTiles[index];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _data,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else {
-          final data = snapshot.data!;
-          return Text('Data: ${data.toString()}');
-        }
-      },
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Challenges'),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: _challengeCount.toDouble(),
+                    min: 1,
+                    max: 39,
+                    divisions: 38,
+                    label: _challengeCount.toString(),
+                    onChanged: _updateChallengeCount,
+                  ),
+                ),
+                Text('$_challengeCount challenges'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<dynamic>>(
+              future: _data,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  final challenges = snapshot.data!;
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4, // Nombre de colonnes dans la grille
+                        crossAxisSpacing: 8.0,
+                        mainAxisSpacing: 8.0,
+                      ),
+                      itemCount: challenges.length,
+                      itemBuilder: (context, index) {
+                        final challenge = challenges[index];
+                        final isExpanded = _expandedTiles[index];
+                        return GestureDetector(
+                          onTap: () => _toggleTileExpansion(index),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            height: isExpanded ? 200 : 100, // Ajustez la hauteur en fonction de l'état
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Image.network(challenge['img']),
+                                    Text('Name: ${challenge['name']['fr']}'),
+                                    if (isExpanded) ...[
+                                      Text('Description: ${challenge['description']['fr']}'),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
