@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -122,13 +124,46 @@ class Page2 extends StatelessWidget {
   }
 }
 
-class Page3 extends StatelessWidget {
+class Page3 extends StatefulWidget {
   const Page3({super.key});
 
   @override
+   _Page3State createState() => _Page3State();
+}
+
+class _Page3State extends State<Page3> {
+  late Future<Map<String, dynamic>> _data;
+
+  @override
+  void initState() {
+    super.initState();
+    _data = fetchData();
+  }
+
+  Future<Map<String, dynamic>> fetchData() async {
+    final response = await http.get(Uri.parse('https://api.dofusdb.fr/almanax'));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Page 3'),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _data,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          final data = snapshot.data!;
+          return Text('Data: ${data.toString()}');
+        }
+      },
     );
   }
 }
