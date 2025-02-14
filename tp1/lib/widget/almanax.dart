@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../storage.dart';
 
 class Almanax extends StatefulWidget {
   const Almanax({super.key});
@@ -12,55 +11,12 @@ class Almanax extends StatefulWidget {
 class _AlmanaxState extends State<Almanax> {
   late Future<Map<dynamic, dynamic>> _data;
   DateTime date = DateTime.now();
+  final StorageService _storageService = StorageService();
 
   @override
   void initState() {
     super.initState();
-    _data = fetchAlmanaxData();
-  }
-
-  Future<Map<dynamic, dynamic>> fetchAlmanaxData() async {
-    final almanaxResponse = await http.get(
-      //Uri.parse('https://api.dofusdb.fr/almanax?date=02/04/2025'),
-      Uri.parse(
-        'https://api.dofusdb.fr/almanax?date=${date.month}/${date.day}/${date.year}',
-      ),
-    );
-    if (almanaxResponse.statusCode == 200) {
-      final almanaxData = json.decode(almanaxResponse.body);
-      final questId = almanaxData['m_id'];
-
-      final questResponse = await http.get(
-        Uri.parse(
-          'https://api.dofusdb.fr/quests?startCriterion[\$regex]=Ad%3D$questId(\$|%26\\)|\\|)&lang=fr',
-        ),
-      );
-      if (questResponse.statusCode == 200) {
-        final questData = json.decode(questResponse.body);
-        final itemId =
-            questData['data'][0]['steps'][0]['objectives'][0]['need']['generated']['items'][0];
-
-        final itemResponse = await http.get(
-          Uri.parse(
-            'https://api.dofusdb.fr/items?\$skip=0&id[]=$itemId&lang=fr',
-          ),
-        );
-        if (itemResponse.statusCode == 200) {
-          final itemData = json.decode(itemResponse.body);
-          return {
-            'almanax': almanaxData,
-            'quest': questData['data'][0],
-            'item': itemData['data'][0],
-          };
-        } else {
-          throw Exception('Failed to load item data');
-        }
-      } else {
-        throw Exception('Failed to load quest data');
-      }
-    } else {
-      throw Exception('Failed to load almanax data');
-    }
+    _data = _storageService.fetchAlmanaxData(date);
   }
 
   @override
@@ -96,7 +52,7 @@ class _AlmanaxState extends State<Almanax> {
                                     date = date.subtract(
                                       const Duration(days: 1),
                                     );
-                                    _data = fetchAlmanaxData();
+                                    _data = _storageService.fetchAlmanaxData(date);
                                   });
                                 },
                                 child: const Icon(Icons.arrow_back),
@@ -111,7 +67,7 @@ class _AlmanaxState extends State<Almanax> {
                                 onPressed: () {
                                   setState(() {
                                     date = date.add(const Duration(days: 1));
-                                    _data = fetchAlmanaxData();
+                                    _data = _storageService.fetchAlmanaxData(date);
                                   });
                                 },
                                 child: const Icon(Icons.arrow_forward),

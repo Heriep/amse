@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../storage.dart';
 
 class PageChallenges extends StatefulWidget {
   const PageChallenges({super.key});
@@ -11,26 +10,12 @@ class PageChallenges extends StatefulWidget {
 
 class _PageChallengesState extends State<PageChallenges> {
   late Future<List<dynamic>> _data;
+  final StorageService _storageService = StorageService();
 
   @override
   void initState() {
     super.initState();
-    _data = fetchData();
-  }
-
-  Future<List<dynamic>> fetchData() async {
-    final response = await http.get(
-      Uri.parse(
-        'https://api.dofusdb.fr/challenges?\$skip=0&\$sort[slug.fr]=1&\$limit=50&categoryId[]=1&iconId[\$ne]=0&lang=fr',
-      ),
-    );
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['data'].toList();
-    } else {
-      throw Exception('Failed to load data');
-    }
+    _data = _storageService.fetchChallengesData();
   }
 
   @override
