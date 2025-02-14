@@ -115,6 +115,33 @@ class StorageService {
     }
   }
 
+ Future<Map<String, dynamic>> fetchItemsData(int typeId, int skip) async {
+    await _loadCache();
+    final cacheKey = 'items_$typeId$skip';
+    if (_cache.containsKey(cacheKey) && !_isCacheExpired(cacheKey)) {
+      return _cache[cacheKey];
+    }
+
+    final response = await http.get(
+      Uri.parse(
+        'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&typeId[\$in][]=$typeId&level[\$gte]=0&level[\$lte]=200&\$skip=$skip&lang=fr',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final items = data['data'].toList();
+      final total = data['total'];
+      final result = {'items': items, 'total': total};
+      _cache[cacheKey] = result;
+      _cacheExpiry[cacheKey] = DateTime.now().add(cacheDuration);
+      await _saveCache();
+      return result;
+    } else {
+      throw Exception('Failed to load items data');
+    }
+  }
+
   bool _isCacheExpired(String key) {
     return DateTime.now().isAfter(_cacheExpiry[key]!);
   }
