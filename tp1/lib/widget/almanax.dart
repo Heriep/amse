@@ -80,16 +80,10 @@ class _AlmanaxState extends State<Almanax> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(0,0,8,0),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.black),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: SizedBox(
-                                      width: 50,
-                                      height: 50,
-                                      child: Image.network(data['item']['img']),
-                                    ),
+                                  child: SizedBox(
+                                    width: 50,
+                                    height: 50,
+                                    child: Image.network(data['item']['img']),
                                   ),
                                 ),
                                 Column(
