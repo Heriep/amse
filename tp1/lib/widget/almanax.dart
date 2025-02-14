@@ -11,6 +11,7 @@ class Almanax extends StatefulWidget {
 
 class _AlmanaxState extends State<Almanax> {
   late Future<Map<dynamic, dynamic>> _data;
+  DateTime date = DateTime.now();
 
   @override
   void initState() {
@@ -21,7 +22,9 @@ class _AlmanaxState extends State<Almanax> {
   Future<Map<dynamic, dynamic>> fetchAlmanaxData() async {
     final almanaxResponse = await http.get(
       //Uri.parse('https://api.dofusdb.fr/almanax?date=02/04/2025'),
-      Uri.parse('https://api.dofusdb.fr/almanax'),
+      Uri.parse(
+        'https://api.dofusdb.fr/almanax?date=${date.month}/${date.day}/${date.year}',
+      ),
     );
     if (almanaxResponse.statusCode == 200) {
       final almanaxData = json.decode(almanaxResponse.body);
@@ -85,12 +88,54 @@ class _AlmanaxState extends State<Almanax> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text('Almanax du jour'),
+                          Row(
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    date = date.subtract(
+                                      const Duration(days: 1),
+                                    );
+                                    _data = fetchAlmanaxData();
+                                  });
+                                },
+                                child: const Icon(Icons.arrow_back),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  'Almanax du \n ${date.day}/${date.month}/${date.year}',
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    date = date.add(const Duration(days: 1));
+                                    _data = fetchAlmanaxData();
+                                  });
+                                },
+                                child: const Icon(Icons.arrow_forward),
+                              ),
+                            ],
+                          ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Row(
                               children: [
-                                Image.network(data['item']['img']),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(0,0,8,0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.black),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: SizedBox(
+                                      width: 50,
+                                      height: 50,
+                                      child: Image.network(data['item']['img']),
+                                    ),
+                                  ),
+                                ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -103,16 +148,6 @@ class _AlmanaxState extends State<Almanax> {
                                     Text(
                                       '- ${data['quest']['steps'][0]['objectives'][0]['need']['generated']['quantities'][0]} x ${data['item']['name']['fr']}',
                                     ),
-                                    // Todo: display almanax data correctly 
-                                    // Text(
-                                    //   '${data['almanax']['name']['fr']}',
-                                    //   style: TextStyle(
-                                    //     fontWeight: FontWeight.bold,
-                                    //   ),
-                                    // ),
-                                    // Text(
-                                    //   '${data['almanax']['desc']['fr']}',
-                                    //),
                                   ],
                                 ),
                               ],
