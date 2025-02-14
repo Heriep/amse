@@ -2,6 +2,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class StorageService {
+  // Singleton instance
+  static final StorageService _instance = StorageService._internal();
+
+  // Factory constructor
+  factory StorageService() {
+    return _instance;
+  }
+
+  // Internal constructor
+  StorageService._internal();
+
   final Map<String, dynamic> _cache = {};
   final Map<String, DateTime> _cacheExpiry = {};
   final Duration cacheDuration = const Duration(hours: 1);
