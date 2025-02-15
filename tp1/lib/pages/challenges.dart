@@ -86,41 +86,75 @@ class GridChallengeState extends State<GridChallenge> {
       builder: (BuildContext context) {
         final challenge = widget.challenges[index];
         return Dialog(
-          backgroundColor: const Color.fromARGB(255, 153, 209, 92),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
-                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFFa8e063),
+                          Color(0xFF56ab2f),
+                        ], // Gradient de vert
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(51), // 0.2 * 255 = 51
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: Offset(0, 3), // décalage de l'ombre
+                        ),
+                      ],
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Image.network(challenge['img']),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        challenge['img'],
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
+                  SizedBox(height: 16),
+                  Text(
                     challenge['name']['fr'],
                     overflow: TextOverflow.clip,
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 16.0),
-                  child: Text(
+                  SizedBox(height: 8),
+                  Text(
                     challenge['description']['fr'],
                     overflow: TextOverflow.clip,
-                    style: const TextStyle(fontSize: 20),
+                    style: const TextStyle(fontSize: 18),
                   ),
-                ),
-              ],
+                  SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text('Fermer'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -134,32 +168,59 @@ class GridChallengeState extends State<GridChallenge> {
       padding: const EdgeInsets.all(8.0),
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 150,
-          crossAxisSpacing: 8.0,
-          mainAxisSpacing: 8.0,
+          maxCrossAxisExtent: 100,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
         ),
         itemCount: widget.challenges.length,
         itemBuilder: (context, index) {
           final challenge = widget.challenges[index];
           return GestureDetector(
             onTap: () => _toggleTileExpansion(index),
-            child: Card(
-              color: const Color.fromARGB(255, 153, 209, 92),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Image.network(challenge['img'], fit: BoxFit.contain),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: FittedBox(
-                      child: Text(
-                        challenge['name']['fr'],
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFFa8e063),
+                    Color(0xFF56ab2f),
+                  ], // Gradient de vert
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(51), // 0.2 * 255 = 51
+                    spreadRadius: 2,
+                    blurRadius: 5,
+                    offset: Offset(0, 3), // décalage de l'ombre
                   ),
                 ],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Card(
+                color:
+                    Colors
+                        .transparent, // rendre la carte transparente pour voir le gradient
+                elevation: 0, // enlever l'élévation de la carte
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Image.network(
+                        challenge['img'],
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: FittedBox(
+                        child: Text(
+                          challenge['name']['fr'],
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

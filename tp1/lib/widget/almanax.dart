@@ -27,8 +27,17 @@ class _AlmanaxState extends State<Almanax> {
         children: [
           Container(
             decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 239, 245, 255),
               border: Border.all(color: Colors.black),
               borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withAlpha((0.5 * 255).toInt()),
+                  spreadRadius: 5,
+                  blurRadius: 7,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
             child: FittedBox(
               child: Center(
@@ -46,12 +55,21 @@ class _AlmanaxState extends State<Almanax> {
                                 _data = _storageService.fetchAlmanaxData(date);
                               });
                             },
+                            style: ElevatedButton.styleFrom(
+                              shape: CircleBorder(),
+                              padding: EdgeInsets.all(10),
+                            ),
                             child: const Icon(Icons.arrow_back),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
                               'Almanax du \n ${date.day}/${date.month}/${date.year}',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                           ElevatedButton(
@@ -61,6 +79,10 @@ class _AlmanaxState extends State<Almanax> {
                                 _data = _storageService.fetchAlmanaxData(date);
                               });
                             },
+                            style: ElevatedButton.styleFrom(
+                              shape: CircleBorder(),
+                              padding: EdgeInsets.all(10),
+                            ),
                             child: const Icon(Icons.arrow_forward),
                           ),
                         ],
@@ -107,10 +129,12 @@ class _AlmanaxState extends State<Almanax> {
                                       'Offrande',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                     ),
                                     Text(
                                       '- ${data['quest']['steps'][0]['objectives'][0]['need']['generated']['quantities'][0]} x ${data['item']['name']['fr']}',
+                                      style: TextStyle(fontSize: 14),
                                     ),
                                   ],
                                 ),

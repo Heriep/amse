@@ -49,6 +49,7 @@ class _PageItemState extends State<PageItem> {
         _maxLevel == 200 &&
         _itemName.isEmpty &&
         _selectedCharacteristics.isEmpty) {
+      _totalItems = 0;
       return {'items': [], 'total': 0};
     }
     final result = await _storageService.fetchItemsData(
@@ -109,6 +110,7 @@ class _PageItemState extends State<PageItem> {
   void _onMinLevelChanged(String value) {
     setState(() {
       _minLevel = int.tryParse(value) ?? 0;
+      _skip = 0;
       _data = _fetchItems();
     });
   }
@@ -116,6 +118,7 @@ class _PageItemState extends State<PageItem> {
   void _onMaxLevelChanged(String value) {
     setState(() {
       _maxLevel = int.tryParse(value) ?? 200;
+      _skip = 0;
       _data = _fetchItems();
     });
   }
@@ -123,6 +126,7 @@ class _PageItemState extends State<PageItem> {
   void _onItemNameSubmitted(String value) {
     setState(() {
       _itemName = value;
+      _skip = 0;
       _data = _fetchItems();
     });
   }
@@ -134,157 +138,193 @@ class _PageItemState extends State<PageItem> {
     });
   }
 
+  void _toggleLikeItem(int itemId) async {
+    final isLiked = await _storageService.isItemLiked(itemId);
+    if (isLiked) {
+      await _storageService.unlikeItem(itemId);
+    } else {
+      await _storageService.likeItem(itemId);
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          TextField(
-            controller: _itemNameController,
-            decoration: InputDecoration(labelText: 'Nom de l\'objet'),
-            onSubmitted: _onItemNameSubmitted,
-            onEditingComplete: () {
-              FocusScope.of(context).unfocus();
-              _onItemNameSubmitted(_itemNameController.text);
-            },
-          ),
-          ExpansionTile(
-            title: Text('Options de recherche avancées'),
-            children: [
-              FutureBuilder<List<dynamic>>(
-                future: _itemTypes,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('Pas de catégorie trouvée'));
-                  } else {
-                    final itemTypes = snapshot.data!;
-                    final groupedItemTypes = <String, List<dynamic>>{};
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _itemNameController,
+                decoration: InputDecoration(
+                  labelText: 'Nom de l\'objet',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onSubmitted: _onItemNameSubmitted,
+                onEditingComplete: () {
+                  FocusScope.of(context).unfocus();
+                  _onItemNameSubmitted(_itemNameController.text);
+                },
+              ),
+            ),
+            ExpansionTile(
+              title: Text(
+                'Options de recherche avancées',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: FutureBuilder<List<dynamic>>(
+                    future: _itemTypes,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(child: Text('Pas de catégorie trouvée'));
+                      } else {
+                        final itemTypes = snapshot.data!;
+                        final groupedItemTypes = <String, List<dynamic>>{};
 
-                    for (var type in itemTypes) {
-                      final superTypeName = type['superType']['name']['fr'];
-                      if (!groupedItemTypes.containsKey(superTypeName)) {
-                        groupedItemTypes[superTypeName] = [];
-                      }
-                      groupedItemTypes[superTypeName]!.add(type);
-                    }
+                        for (var type in itemTypes) {
+                          final superTypeName = type['superType']['name']['fr'];
+                          if (!groupedItemTypes.containsKey(superTypeName)) {
+                            groupedItemTypes[superTypeName] = [];
+                          }
+                          groupedItemTypes[superTypeName]!.add(type);
+                        }
 
-                    return Column(
-                      children: [
-                        DropdownButton<int>(
-                          value: _typeId,
-                          items: [
-                            DropdownMenuItem<int>(
-                              value: 0,
-                              child: Text('Catégorie'),
-                            ),
-                            ...groupedItemTypes.entries.expand((entry) {
-                              final superTypeName = entry.key;
-                              final types = entry.value;
-                              return [
+                        return Column(
+                          children: [
+                            DropdownButton<int>(
+                              value: _typeId,
+                              items: [
                                 DropdownMenuItem<int>(
-                                  value: -1,
-                                  enabled: false,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        top: BorderSide(
-                                          color: Colors.orange,
-                                          width: 2.0,
+                                  value: 0,
+                                  child: Text('Catégorie'),
+                                ),
+                                ...groupedItemTypes.entries.expand((entry) {
+                                  final superTypeName = entry.key;
+                                  final types = entry.value;
+                                  return [
+                                    DropdownMenuItem<int>(
+                                      value: -1,
+                                      enabled: false,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            top: BorderSide(
+                                              color: Colors.blue,
+                                              width: 2.0,
+                                            ),
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          superTypeName,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8.0,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      superTypeName,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange,
+                                    ...types.map(
+                                      (type) => DropdownMenuItem<int>(
+                                        value: type['id'],
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 16.0,
+                                          ),
+                                          child: Text(type['name']['fr']),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                                ...types.map(
-                                  (type) => DropdownMenuItem<int>(
-                                    value: type['id'],
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 16.0,
+                                  ];
+                                }),
+                              ],
+                              onChanged: _onTypeChanged,
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    decoration: InputDecoration(
+                                      labelText: 'Niveau minimum',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Text(type['name']['fr']),
                                     ),
+                                    keyboardType: TextInputType.number,
+                                    onSubmitted: _onMinLevelChanged,
                                   ),
                                 ),
-                              ];
-                            }),
-                          ],
-                          onChanged: _onTypeChanged,
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  labelText: 'Niveau minimum',
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    decoration: InputDecoration(
+                                      labelText: 'Niveau maximum',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    onSubmitted: _onMaxLevelChanged,
+                                  ),
                                 ),
-                                keyboardType: TextInputType.number,
-                                onChanged: _onMinLevelChanged,
-                              ),
-                            ),
-                            Expanded(
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  labelText: 'Niveau maximum',
-                                ),
-                                keyboardType: TextInputType.number,
-                                onChanged: _onMaxLevelChanged,
-                              ),
+                              ],
                             ),
                           ],
-                        ),
-                      ],
-                    );
-                  }
-                },
-              ),
-              FutureBuilder<List<dynamic>>(
-                future: _characteristics,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(
-                      child: Text('Pas de caractéristique trouvée'),
-                    );
-                  } else {
-                    final characteristics = snapshot.data!;
-                    return MultiSelectDropdown(
-                      items: characteristics,
-                      selectedIds: _selectedCharacteristics,
-                      onSelectionChanged: (selected) {
-                        setState(() {
-                          _selectedCharacteristics.clear();
-                          _selectedCharacteristics.addAll(selected);
-                          _skip = 0;
-                          _data = _fetchItems();
-                        });
-                      },
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
-          Expanded(
-            child: FutureBuilder<Map<String, dynamic>>(
+                        );
+                      }
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: FutureBuilder<List<dynamic>>(
+                    future: _characteristics,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Text('Pas de caractéristique trouvée'),
+                        );
+                      } else {
+                        final characteristics = snapshot.data!;
+                        return MultiSelectDropdown(
+                          items: characteristics,
+                          selectedIds: _selectedCharacteristics,
+                          onSelectionChanged: (selected) {
+                            setState(() {
+                              _selectedCharacteristics.clear();
+                              _selectedCharacteristics.addAll(selected);
+                              _skip = 0;
+                              _data = _fetchItems();
+                            });
+                          },
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+            FutureBuilder<Map<String, dynamic>>(
               future: _data,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -300,41 +340,127 @@ class _PageItemState extends State<PageItem> {
                     children: [
                       Text(
                         'Nombre d\'items trouvés: ${snapshot.data!['total']}',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            return ListTile(
-                              leading: Image.network(item['img']),
-                              title: Text(item['name']['fr']),
-                              subtitle: Text('Level: ${item['level']}'),
-                            );
-                          },
-                        ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              dividerColor: Colors.transparent,
+                              expansionTileTheme: ExpansionTileThemeData(
+                                tilePadding: EdgeInsets.zero,
+                                childrenPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            child: Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 4,
+                              margin: const EdgeInsets.all(8.0),
+                              child: ExpansionTile(
+                                leading: Padding(
+                                  padding: const EdgeInsets.all(3.0),
+                                  child: Image.network(item['img']),
+                                ),
+                                title: Text(item['name']['fr']),
+                                trailing: FutureBuilder<bool>(
+                                  future: _storageService.isItemLiked(
+                                    item['id'],
+                                  ),
+                                  builder: (context, likeSnapshot) {
+                                    if (likeSnapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return Icon(Icons.favorite_border);
+                                    } else if (likeSnapshot.hasError) {
+                                      return Icon(Icons.error);
+                                    } else {
+                                      final isLiked =
+                                          likeSnapshot.data ?? false;
+                                      return IconButton(
+                                        icon: Icon(
+                                          isLiked
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color: isLiked ? Colors.red : null,
+                                        ),
+                                        onPressed:
+                                            () => _toggleLikeItem(item['id']),
+                                      );
+                                    }
+                                  },
+                                ),
+                                children: [
+                                  ListTile(
+                                    title: Text('Statistiques de l\'objet'),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Level: ${item['level']}'),
+                                        // Add more item statistics here
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   );
                 }
               },
             ),
-          ),
-          if (_totalItems >= 10)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  (_totalItems / 10).ceil(),
-                  (index) => TextButton(
-                    onPressed: () => _onPageChanged(index * 10),
-                    child: Text('${index + 1}'),
+            if (_totalItems > 0)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      (_totalItems / 10).ceil(),
+                      (index) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        child: GestureDetector(
+                          onTap: () => _onPageChanged(index * 10),
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color:
+                                  (_skip / 10).round() == index
+                                      ? Colors.blue
+                                      : Colors.transparent,
+                              border: Border.all(color: Colors.blue),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  color:
+                                      (_skip / 10).round() == index
+                                          ? Colors.white
+                                          : Colors.blue,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

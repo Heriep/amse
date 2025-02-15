@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const MyHomePage(title: 'Encyclopédie Dofus'),
     );
   }
@@ -33,18 +34,25 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
+  bool _showAboutPage = false;
 
   static const List<Widget> _pages = <Widget>[
     PageHome(),
     PageItem(),
     PageStuff(),
     PageChallenges(),
-    PageAbout(),
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      _showAboutPage = false;
+    });
+  }
+
+  void _navigateToAbout() {
+    setState(() {
+      _showAboutPage = true;
     });
   }
 
@@ -53,29 +61,63 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       extendBodyBehindAppBar: false,
       appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: Color.fromARGB(255, 210, 255, 195),
-        scrolledUnderElevation: 0.0,
-      ),
-      body: _pages.elementAt(_selectedIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Items'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.construction),
-            label: 'Stuff',
+        title: Text(
+          widget.title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            color: Colors.white,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.emoji_events),
-            label: 'Challenges',
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.help), label: 'About'),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.info, color: Colors.white),
+            onPressed: _navigateToAbout,
+          ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
-        onTap: _onItemTapped,
+      ),
+      body: _showAboutPage ? PageAbout() : _pages.elementAt(_selectedIndex),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Items'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.construction),
+              label: 'Stuff',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.emoji_events),
+              label: 'Challenges',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.white70,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

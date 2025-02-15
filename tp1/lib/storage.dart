@@ -210,6 +210,50 @@ class StorageService {
     }
   }
 
+  Future<void> likeItem(int itemId) async {
+    await _loadCache();
+    final cacheKey = 'likedItems';
+    if (!_cache.containsKey(cacheKey)) {
+      _cache[cacheKey] = [];
+    }
+    final likedItems = List<int>.from(_cache[cacheKey]);
+    if (!likedItems.contains(itemId)) {
+      likedItems.add(itemId);
+    }
+    _cache[cacheKey] = likedItems;
+    await _saveCache();
+  }
+
+  Future<void> unlikeItem(int itemId) async {
+    await _loadCache();
+    final cacheKey = 'likedItems';
+    if (_cache.containsKey(cacheKey)) {
+      final likedItems = List<int>.from(_cache[cacheKey]);
+      likedItems.remove(itemId);
+      _cache[cacheKey] = likedItems;
+      await _saveCache();
+    }
+  }
+
+  Future<bool> isItemLiked(int itemId) async {
+    await _loadCache();
+    final cacheKey = 'likedItems';
+    if (_cache.containsKey(cacheKey)) {
+      final likedItems = List<int>.from(_cache[cacheKey]);
+      return likedItems.contains(itemId);
+    }
+    return false;
+  }
+
+  Future<List<int>> getLikedItems() async {
+    await _loadCache();
+    final cacheKey = 'likedItems';
+    if (_cache.containsKey(cacheKey)) {
+      return List<int>.from(_cache[cacheKey]);
+    }
+    return [];
+  }
+
   bool _isCacheExpired(String key) {
     return DateTime.now().isAfter(_cacheExpiry[key]!);
   }
