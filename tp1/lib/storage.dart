@@ -115,30 +115,56 @@ class StorageService {
     }
   }
 
- Future<Map<String, dynamic>> fetchItemsData(int typeId, int skip) async {
+Future<Map<String, dynamic>> fetchItemsData(int typeId, int skip) async {
+  //await _loadCache();
+  //final cacheKey = 'items_${typeId}_$skip';
+  //if (_cache.containsKey(cacheKey) && !_isCacheExpired(cacheKey)) {
+  //  return _cache[cacheKey];
+  //}
+
+  final typeFilter = typeId == 0 ? '' : 'typeId[\$in][]=$typeId&';
+  final response = await http.get(
+    Uri.parse(
+      'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&${typeFilter}level[\$gte]=0&level[\$lte]=200&\$skip=$skip&lang=fr',
+    ),
+  );
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    final items = data['data'].toList();
+    final total = data['total'];
+    final result = {'items': items, 'total': total};
+    //_cache[cacheKey] = result;
+    //_cacheExpiry[cacheKey] = DateTime.now().add(cacheDuration);
+    //await _saveCache();
+    return result;
+  } else {
+    throw Exception('Failed to load items data');
+  }
+}
+
+  Future<List<dynamic>> fetchItemTypes(int skip) async {
     await _loadCache();
-    final cacheKey = 'items_$typeId$skip';
+    final cacheKey = 'item_types_$skip';
     if (_cache.containsKey(cacheKey) && !_isCacheExpired(cacheKey)) {
       return _cache[cacheKey];
     }
 
     final response = await http.get(
       Uri.parse(
-        'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&typeId[\$in][]=$typeId&level[\$gte]=0&level[\$lte]=200&\$skip=$skip&lang=fr',
+        'https://api.dofusdb.fr/item-types?\$skip=$skip&\$limit=50&lang=fr',
       ),
     );
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      final items = data['data'].toList();
-      final total = data['total'];
-      final result = {'items': items, 'total': total};
-      _cache[cacheKey] = result;
+      final itemTypes = data['data'].toList();
+      _cache[cacheKey] = itemTypes;
       _cacheExpiry[cacheKey] = DateTime.now().add(cacheDuration);
       await _saveCache();
-      return result;
+      return itemTypes;
     } else {
-      throw Exception('Failed to load items data');
+      throw Exception('Failed to load item types');
     }
   }
 

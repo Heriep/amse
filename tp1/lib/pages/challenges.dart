@@ -36,7 +36,7 @@ class _PageChallengesState extends State<PageChallenges> {
                         crossAxisSpacing: 8.0,
                         mainAxisSpacing: 8.0,
                       ),
-                      itemCount: 4,
+                      itemCount: 1,
                       itemBuilder: (context, index) {
                         return Card(
                           color: const Color.fromARGB(255, 153, 209, 92),

@@ -10,6 +10,7 @@ class PageItem extends StatefulWidget {
 
 class _PageItemState extends State<PageItem> {
   late Future<Map<String, dynamic>> _data;
+  late Future<List<dynamic>> _itemTypes;
   final StorageService _storageService = StorageService();
   int _typeId = 1;
   int _skip = 0;
@@ -19,6 +20,7 @@ class _PageItemState extends State<PageItem> {
   void initState() {
     super.initState();
     _data = _fetchItems();
+    _itemTypes = _fetchItemTypes();
   }
 
   Future<Map<String, dynamic>> _fetchItems() async {
@@ -27,6 +29,24 @@ class _PageItemState extends State<PageItem> {
       _totalItems = result['total'];
     });
     return result;
+  }
+
+  Future<List<dynamic>> _fetchItemTypes() async {
+    List<dynamic> allItemTypes = [];
+    for (int i = 0; i < 225; i += 50) {
+      final itemTypes = await _storageService.fetchItemTypes(i);
+      allItemTypes.addAll(itemTypes);
+    }
+    allItemTypes.sort((a, b) {
+      int superTypeComparison = a['superType']['name']['fr'].compareTo(
+        b['superType']['name']['fr'],
+      );
+      if (superTypeComparison != 0) {
+        return superTypeComparison;
+      }
+      return a['name']['fr'].compareTo(b['name']['fr']);
+    });
+    return allItemTypes;
   }
 
   void _onTypeChanged(int? newValue) {
@@ -49,21 +69,76 @@ class _PageItemState extends State<PageItem> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Items')),
       body: Column(
         children: [
-          DropdownButton<int>(
-            value: _typeId,
-            items:
-                List.generate(10, (index) => index + 1)
-                    .map(
-                      (e) => DropdownMenuItem<int>(
-                        value: e,
-                        child: Text('Type $e'),
-                      ),
-                    )
-                    .toList(),
-            onChanged: _onTypeChanged,
+          FutureBuilder<List<dynamic>>(
+            future: _itemTypes,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(child: Text('No item types found'));
+              } else {
+                final itemTypes = snapshot.data!;
+                final groupedItemTypes = <String, List<dynamic>>{};
+
+                for (var type in itemTypes) {
+                  final superTypeName = type['superType']['name']['fr'];
+                  if (!groupedItemTypes.containsKey(superTypeName)) {
+                    groupedItemTypes[superTypeName] = [];
+                  }
+                  groupedItemTypes[superTypeName]!.add(type);
+                }
+
+                return DropdownButton<int>(
+                  value: _typeId,
+                  items: [
+                    DropdownMenuItem<int>(
+                      value: 0,
+                      child: Text('Tous les types (problème de performance)'),
+                    ),
+                    ...groupedItemTypes.entries.expand((entry) {
+                      final superTypeName = entry.key;
+                      final types = entry.value;
+                      return [
+                        DropdownMenuItem<int>(
+                          value: -1,
+                          enabled: false,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: Colors.orange, width: 2.0),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            alignment: Alignment.center,
+                            child: Text(
+                              superTypeName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ),
+                        ...types.map(
+                          (type) => DropdownMenuItem<int>(
+                            value: type['id'],
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 16.0),
+                              child: Text(type['name']['fr']),
+                            ),
+                          ),
+                        ),
+                      ];
+                    }),
+                  ],
+                  onChanged: _onTypeChanged,
+                );
+              }
+            },
           ),
           Expanded(
             child: FutureBuilder<Map<String, dynamic>>(
@@ -78,15 +153,25 @@ class _PageItemState extends State<PageItem> {
                   return Center(child: Text('No items found'));
                 } else {
                   final items = snapshot.data!['items'];
-                  return ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return ListTile(
-                        title: Text(item['name']['fr']),
-                        subtitle: Text('Level: ${item['level']}'),
-                      );
-                    },
+                  return Column(
+                    children: [
+                      Text(
+                        'Nombre d\'items trouvés: ${snapshot.data!['total']}',
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            final item = items[index];
+                            return ListTile(
+                              leading: Image.network(item['img']),
+                              title: Text(item['name']['fr']),
+                              subtitle: Text('Level: ${item['level']}'),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   );
                 }
               },

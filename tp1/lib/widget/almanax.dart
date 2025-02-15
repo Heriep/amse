@@ -31,55 +31,69 @@ class _AlmanaxState extends State<Almanax> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: FittedBox(
-              child: FutureBuilder<Map<dynamic, dynamic>>(
-                future: _data,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (snapshot.hasData) {
-                    final data = snapshot.data!;
-                    return Center(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+              child: Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    date = date.subtract(
-                                      const Duration(days: 1),
-                                    );
-                                    _data = _storageService.fetchAlmanaxData(date);
-                                  });
-                                },
-                                child: const Icon(Icons.arrow_back),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  'Almanax du \n ${date.day}/${date.month}/${date.year}',
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    date = date.add(const Duration(days: 1));
-                                    _data = _storageService.fetchAlmanaxData(date);
-                                  });
-                                },
-                                child: const Icon(Icons.arrow_forward),
-                              ),
-                            ],
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                date = date.subtract(const Duration(days: 1));
+                                _data = _storageService.fetchAlmanaxData(date);
+                              });
+                            },
+                            child: const Icon(Icons.arrow_back),
                           ),
                           Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Almanax du \n ${date.day}/${date.month}/${date.year}',
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                date = date.add(const Duration(days: 1));
+                                _data = _storageService.fetchAlmanaxData(date);
+                              });
+                            },
+                            child: const Icon(Icons.arrow_forward),
+                          ),
+                        ],
+                      ),
+                    ),
+                    FutureBuilder<Map<dynamic, dynamic>>(
+                      future: _data,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
+                        } else if (snapshot.hasData) {
+                          final data = snapshot.data!;
+                          return Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Row(
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(0,0,8,0),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    0,
+                                    0,
+                                    8,
+                                    0,
+                                  ),
                                   child: SizedBox(
                                     width: 50,
                                     height: 50,
@@ -102,14 +116,14 @@ class _AlmanaxState extends State<Almanax> {
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  } else {
-                    return const Center(child: Text('No data available'));
-                  }
-                },
+                          );
+                        } else {
+                          return const Center(child: Text('No data available'));
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
