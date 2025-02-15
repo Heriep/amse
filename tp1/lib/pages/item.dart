@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tp1/widget/multiselectbutton.dart';
 import '../storage.dart';
 
 class PageItem extends StatefulWidget {
@@ -11,6 +12,7 @@ class PageItem extends StatefulWidget {
 class _PageItemState extends State<PageItem> {
   late Future<Map<String, dynamic>> _data;
   late Future<List<dynamic>> _itemTypes;
+  late Future<List<dynamic>> _characteristics;
   final StorageService _storageService = StorageService();
   final TextEditingController _itemNameController = TextEditingController();
   int _typeId = 0;
@@ -19,11 +21,13 @@ class _PageItemState extends State<PageItem> {
   int _minLevel = 0;
   int _maxLevel = 200;
   String _itemName = '';
+  final List<int> _selectedCharacteristics = [];
 
   @override
   void initState() {
     super.initState();
     _itemTypes = _fetchItemTypes();
+    _characteristics = _fetchCharacteristicsData();
     _data = _fetchItems();
 
     _itemNameController.addListener(() {
@@ -43,7 +47,8 @@ class _PageItemState extends State<PageItem> {
     if (_typeId == 0 &&
         _minLevel == 0 &&
         _maxLevel == 200 &&
-        _itemName.isEmpty) {
+        _itemName.isEmpty &&
+        _selectedCharacteristics.isEmpty) {
       return {'items': [], 'total': 0};
     }
     final result = await _storageService.fetchItemsData(
@@ -52,6 +57,7 @@ class _PageItemState extends State<PageItem> {
       _minLevel,
       _maxLevel,
       _itemName,
+      _selectedCharacteristics,
     );
     setState(() {
       _totalItems = result['total'];
@@ -75,6 +81,19 @@ class _PageItemState extends State<PageItem> {
       return a['name']['fr'].compareTo(b['name']['fr']);
     });
     return allItemTypes;
+  }
+
+  Future<List<dynamic>> _fetchCharacteristicsData() async {
+    List<dynamic> allCharacteristics = [];
+    // Comme il y a 53 caractéristiques et que l'API limite à 50, on réalise deux appels.
+    for (int i = 0; i < 100; i += 50) {
+      final characteristicsChunk = await _storageService
+          .fetchCharacteristicsData(i);
+      if (characteristicsChunk.isEmpty) break;
+      allCharacteristics.addAll(characteristicsChunk);
+      if (characteristicsChunk.length < 50) break;
+    }
+    return allCharacteristics;
   }
 
   void _onTypeChanged(int? newValue) {
@@ -234,6 +253,32 @@ class _PageItemState extends State<PageItem> {
                   }
                 },
               ),
+FutureBuilder<List<dynamic>>(
+  future: _characteristics,
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return Center(child: CircularProgressIndicator());
+    } else if (snapshot.hasError) {
+      return Center(child: Text('Error: ${snapshot.error}'));
+    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      return Center(child: Text('Pas de caractéristique trouvée'));
+    } else {
+      final characteristics = snapshot.data!;
+      return MultiSelectDropdown(
+        items: characteristics,
+        selectedIds: _selectedCharacteristics,
+        onSelectionChanged: (selected) {
+          setState(() {
+            _selectedCharacteristics.clear();
+            _selectedCharacteristics.addAll(selected);
+            _skip = 0;
+            _data = _fetchItems();
+          });
+        },
+      );
+    }
+  },
+)
             ],
           ),
           Expanded(

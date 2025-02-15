@@ -118,27 +118,59 @@ class StorageService {
     }
   }
 
+  Future<List<dynamic>> fetchCharacteristicsData(int skip) async {
+    await _loadCache();
+    final cacheKey = 'characteristics_$skip';
+    if (_cache.containsKey(cacheKey)) {
+      return _cache[cacheKey];
+    }
+
+    final response = await http.get(
+      Uri.parse(
+        'https://api.dofusdb.fr/characteristics?\$skip=$skip&visible=true&\$limit=50&categoryId[\$in][]=2&categoryId[\$in][]=3&categoryId[\$in][]=4&categoryId[\$in][]=5&\$sort[categoryId]=1&\$sort[order]=1&lang=fr',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final characteristics = (data['data'] as List).toList();
+      _cache[cacheKey] = characteristics;
+      _cacheExpiry[cacheKey] = DateTime.now().add(cacheDuration);
+      await _saveCache();
+      return characteristics;
+    } else {
+      throw Exception('Failed to load characteristics data');
+    }
+  }
+
   Future<Map<String, dynamic>> fetchItemsData(
     int typeId,
     int skip,
     int minLevel,
     int maxLevel,
     String itemName,
+    List<int> characteristics, // changed from int to List<int>
   ) async {
-    //await _loadCache();
-    //final cacheKey = 'items_${typeId}_$skip';
-    //if (_cache.containsKey(cacheKey) && !_isCacheExpired(cacheKey)) {
-    //  return _cache[cacheKey];
-    //}
-
     final typeFilter = typeId == 0 ? '' : 'typeId[\$in][]=$typeId&';
     final nameFilter =
         itemName.isEmpty
             ? ''
             : 'slug.fr[\$search]=${Uri.encodeComponent(itemName)}&';
+    // Build filters for each selected characteristic
+    String characteristicFilter = '';
+    for (var i = 0; i < characteristics.length; i++) {
+      characteristicFilter +=
+          '&\$and[$i][effects][\$elemMatch][characteristic]=${characteristics[i]}';
+    }
+
     final response = await http.get(
       Uri.parse(
-        'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&$nameFilter${typeFilter}level[\$gte]=$minLevel&level[\$lte]=$maxLevel&\$skip=$skip&lang=fr',
+        'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&'
+        '$nameFilter'
+        '$typeFilter'
+        'level[\$gte]=$minLevel&level[\$lte]=$maxLevel'
+        '$characteristicFilter'
+        '&\$skip=$skip&lang=fr',
       ),
     );
 
@@ -147,9 +179,6 @@ class StorageService {
       final items = data['data'].toList();
       final total = data['total'];
       final result = {'items': items, 'total': total};
-      //_cache[cacheKey] = result;
-      //_cacheExpiry[cacheKey] = DateTime.now().add(cacheDuration);
-      //await _saveCache();
       return result;
     } else {
       throw Exception('Failed to load items data');
