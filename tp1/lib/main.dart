@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const MyHomePage(title: 'Encyclopédie Dofus'),
+      home: const MyHomePage(title: 'Dofuspedia'),
     );
   }
 }
