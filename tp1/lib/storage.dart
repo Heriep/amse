@@ -115,7 +115,7 @@ class StorageService {
     }
   }
 
-Future<Map<String, dynamic>> fetchItemsData(int typeId, int skip) async {
+Future<Map<String, dynamic>> fetchItemsData(int typeId, int skip, int minLevel, int maxLevel) async {
   //await _loadCache();
   //final cacheKey = 'items_${typeId}_$skip';
   //if (_cache.containsKey(cacheKey) && !_isCacheExpired(cacheKey)) {
@@ -125,7 +125,7 @@ Future<Map<String, dynamic>> fetchItemsData(int typeId, int skip) async {
   final typeFilter = typeId == 0 ? '' : 'typeId[\$in][]=$typeId&';
   final response = await http.get(
     Uri.parse(
-      'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&${typeFilter}level[\$gte]=0&level[\$lte]=200&\$skip=$skip&lang=fr',
+      'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&${typeFilter}level[\$gte]=$minLevel&level[\$lte]=$maxLevel&\$skip=$skip&lang=fr',
     ),
   );
 

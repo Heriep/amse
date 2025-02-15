@@ -15,6 +15,8 @@ class _PageItemState extends State<PageItem> {
   int _typeId = 1;
   int _skip = 0;
   int _totalItems = 0;
+  int _minLevel = 0;
+  int _maxLevel = 200;
 
   @override
   void initState() {
@@ -24,7 +26,12 @@ class _PageItemState extends State<PageItem> {
   }
 
   Future<Map<String, dynamic>> _fetchItems() async {
-    final result = await _storageService.fetchItemsData(_typeId, _skip);
+    final result = await _storageService.fetchItemsData(
+      _typeId,
+      _skip,
+      _minLevel,
+      _maxLevel,
+    );
     setState(() {
       _totalItems = result['total'];
     });
@@ -57,6 +64,20 @@ class _PageItemState extends State<PageItem> {
         _data = _fetchItems();
       });
     }
+  }
+
+  void _onMinLevelChanged(String value) {
+    setState(() {
+      _minLevel = int.tryParse(value) ?? 0;
+      _data = _fetchItems();
+    });
+  }
+
+  void _onMaxLevelChanged(String value) {
+    setState(() {
+      _maxLevel = int.tryParse(value) ?? 200;
+      _data = _fetchItems();
+    });
   }
 
   void _onPageChanged(int newSkip) {
@@ -92,50 +113,83 @@ class _PageItemState extends State<PageItem> {
                   groupedItemTypes[superTypeName]!.add(type);
                 }
 
-                return DropdownButton<int>(
-                  value: _typeId,
-                  items: [
-                    DropdownMenuItem<int>(
-                      value: 0,
-                      child: Text('Tous les types (problème de performance)'),
-                    ),
-                    ...groupedItemTypes.entries.expand((entry) {
-                      final superTypeName = entry.key;
-                      final types = entry.value;
-                      return [
+                return Column(
+                  children: [
+                    DropdownButton<int>(
+                      value: _typeId,
+                      items: [
                         DropdownMenuItem<int>(
-                          value: -1,
-                          enabled: false,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(color: Colors.orange, width: 2.0),
-                              ),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            alignment: Alignment.center,
-                            child: Text(
-                              superTypeName,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange,
-                              ),
-                            ),
+                          value: 0,
+                          child: Text(
+                            'Tous les types (problème de performance)',
                           ),
                         ),
-                        ...types.map(
-                          (type) => DropdownMenuItem<int>(
-                            value: type['id'],
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 16.0),
-                              child: Text(type['name']['fr']),
+                        ...groupedItemTypes.entries.expand((entry) {
+                          final superTypeName = entry.key;
+                          final types = entry.value;
+                          return [
+                            DropdownMenuItem<int>(
+                              value: -1,
+                              enabled: false,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(
+                                      color: Colors.orange,
+                                      width: 2.0,
+                                    ),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  superTypeName,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              ),
                             ),
+                            ...types.map(
+                              (type) => DropdownMenuItem<int>(
+                                value: type['id'],
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child: Text(type['name']['fr']),
+                                ),
+                              ),
+                            ),
+                          ];
+                        }),
+                      ],
+                      onChanged: _onTypeChanged,
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              labelText: 'Niveau minimum',
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: _onMinLevelChanged,
                           ),
                         ),
-                      ];
-                    }),
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              labelText: 'Niveau maximum',
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: _onMaxLevelChanged,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
-                  onChanged: _onTypeChanged,
                 );
               }
             },
