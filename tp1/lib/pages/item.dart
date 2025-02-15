@@ -253,32 +253,34 @@ class _PageItemState extends State<PageItem> {
                   }
                 },
               ),
-FutureBuilder<List<dynamic>>(
-  future: _characteristics,
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return Center(child: CircularProgressIndicator());
-    } else if (snapshot.hasError) {
-      return Center(child: Text('Error: ${snapshot.error}'));
-    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-      return Center(child: Text('Pas de caractéristique trouvée'));
-    } else {
-      final characteristics = snapshot.data!;
-      return MultiSelectDropdown(
-        items: characteristics,
-        selectedIds: _selectedCharacteristics,
-        onSelectionChanged: (selected) {
-          setState(() {
-            _selectedCharacteristics.clear();
-            _selectedCharacteristics.addAll(selected);
-            _skip = 0;
-            _data = _fetchItems();
-          });
-        },
-      );
-    }
-  },
-)
+              FutureBuilder<List<dynamic>>(
+                future: _characteristics,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: Text('Pas de caractéristique trouvée'),
+                    );
+                  } else {
+                    final characteristics = snapshot.data!;
+                    return MultiSelectDropdown(
+                      items: characteristics,
+                      selectedIds: _selectedCharacteristics,
+                      onSelectionChanged: (selected) {
+                        setState(() {
+                          _selectedCharacteristics.clear();
+                          _selectedCharacteristics.addAll(selected);
+                          _skip = 0;
+                          _data = _fetchItems();
+                        });
+                      },
+                    );
+                  }
+                },
+              ),
             ],
           ),
           Expanded(
