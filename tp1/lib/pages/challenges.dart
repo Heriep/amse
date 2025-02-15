@@ -32,19 +32,37 @@ class _PageChallengesState extends State<PageChallenges> {
                     padding: const EdgeInsets.all(8.0),
                     child: GridView.builder(
                       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 150,
+                        maxCrossAxisExtent: 100,
                         crossAxisSpacing: 8.0,
                         mainAxisSpacing: 8.0,
                       ),
                       itemCount: 1,
                       itemBuilder: (context, index) {
-                        return Card(
-                          color: const Color.fromARGB(255, 153, 209, 92),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFFa8e063),
+                                Color(0xFF56ab2f),
+                              ], // Gradient de vert
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(
+                                  51,
+                                ), // 0.2 * 255 = 51
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                                offset: Offset(0, 3), // décalage de l'ombre
+                              ),
+                            ],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: CircularProgressIndicator(),
                           ),
                         );
                       },

@@ -6,7 +6,7 @@ class PageAbout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +40,7 @@ class PageAbout extends StatelessWidget {
             ),
             SizedBox(height: 8),
             Text(
-              'Pierre Provost\nÉtudiant promotion FISE 2026 à IMT Nord Europe',
+              'Pierre Provost\nPromotion FISE 2026 à IMT Nord Europe\nCe projet a été réalisé dans le cadre des travaux pratiques de IMT Nord Europe.',
               style: TextStyle(fontSize: 16, color: Colors.black87),
             ),
             SizedBox(height: 16),
@@ -74,6 +74,20 @@ class PageAbout extends StatelessWidget {
             SizedBox(height: 8),
             Text(
               'Application : TP1',
+              style: TextStyle(fontSize: 16, color: Colors.black87),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Copyright :',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Certaines illustrations sont la propriété d\'Ankama Studio et de Dofus - Tous droits réservés.\nCertaines données viennent de dofusdb.fr',
               style: TextStyle(fontSize: 16, color: Colors.black87),
             ),
           ],

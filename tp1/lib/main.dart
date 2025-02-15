@@ -102,15 +102,15 @@ class _MyHomePageState extends State<MyHomePage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Items'),
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
+            BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Objets'),
             BottomNavigationBarItem(
               icon: Icon(Icons.construction),
-              label: 'Stuff',
+              label: 'Equipements',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.emoji_events),
-              label: 'Challenges',
+              label: 'Défis',
             ),
           ],
           currentIndex: _selectedIndex,
