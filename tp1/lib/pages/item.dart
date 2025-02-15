@@ -12,25 +12,46 @@ class _PageItemState extends State<PageItem> {
   late Future<Map<String, dynamic>> _data;
   late Future<List<dynamic>> _itemTypes;
   final StorageService _storageService = StorageService();
-  int _typeId = 1;
+  final TextEditingController _itemNameController = TextEditingController();
+  int _typeId = 0;
   int _skip = 0;
   int _totalItems = 0;
   int _minLevel = 0;
   int _maxLevel = 200;
+  String _itemName = '';
 
   @override
   void initState() {
     super.initState();
-    _data = _fetchItems();
     _itemTypes = _fetchItemTypes();
+    _data = _fetchItems();
+
+    _itemNameController.addListener(() {
+      if (_itemNameController.text.isNotEmpty) {
+        _itemName = _itemNameController.text;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _itemNameController.dispose();
+    super.dispose();
   }
 
   Future<Map<String, dynamic>> _fetchItems() async {
+    if (_typeId == 0 &&
+        _minLevel == 0 &&
+        _maxLevel == 200 &&
+        _itemName.isEmpty) {
+      return {'items': [], 'total': 0};
+    }
     final result = await _storageService.fetchItemsData(
       _typeId,
       _skip,
       _minLevel,
       _maxLevel,
+      _itemName,
     );
     setState(() {
       _totalItems = result['total'];
@@ -80,6 +101,13 @@ class _PageItemState extends State<PageItem> {
     });
   }
 
+  void _onItemNameSubmitted(String value) {
+    setState(() {
+      _itemName = value;
+      _data = _fetchItems();
+    });
+  }
+
   void _onPageChanged(int newSkip) {
     setState(() {
       _skip = newSkip;
@@ -92,107 +120,121 @@ class _PageItemState extends State<PageItem> {
     return Scaffold(
       body: Column(
         children: [
-          FutureBuilder<List<dynamic>>(
-            future: _itemTypes,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('No item types found'));
-              } else {
-                final itemTypes = snapshot.data!;
-                final groupedItemTypes = <String, List<dynamic>>{};
+          TextField(
+            controller: _itemNameController,
+            decoration: InputDecoration(labelText: 'Nom de l\'objet'),
+            onSubmitted: _onItemNameSubmitted,
+            onEditingComplete: () {
+              FocusScope.of(context).unfocus();
+              _onItemNameSubmitted(_itemNameController.text);
+            },
+          ),
+          ExpansionTile(
+            title: Text('Options de recherche avancées'),
+            children: [
+              FutureBuilder<List<dynamic>>(
+                future: _itemTypes,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('Pas de catégorie trouvée'));
+                  } else {
+                    final itemTypes = snapshot.data!;
+                    final groupedItemTypes = <String, List<dynamic>>{};
 
-                for (var type in itemTypes) {
-                  final superTypeName = type['superType']['name']['fr'];
-                  if (!groupedItemTypes.containsKey(superTypeName)) {
-                    groupedItemTypes[superTypeName] = [];
-                  }
-                  groupedItemTypes[superTypeName]!.add(type);
-                }
+                    for (var type in itemTypes) {
+                      final superTypeName = type['superType']['name']['fr'];
+                      if (!groupedItemTypes.containsKey(superTypeName)) {
+                        groupedItemTypes[superTypeName] = [];
+                      }
+                      groupedItemTypes[superTypeName]!.add(type);
+                    }
 
-                return Column(
-                  children: [
-                    DropdownButton<int>(
-                      value: _typeId,
-                      items: [
-                        DropdownMenuItem<int>(
-                          value: 0,
-                          child: Text(
-                            'Tous les types (problème de performance)',
-                          ),
-                        ),
-                        ...groupedItemTypes.entries.expand((entry) {
-                          final superTypeName = entry.key;
-                          final types = entry.value;
-                          return [
+                    return Column(
+                      children: [
+                        DropdownButton<int>(
+                          value: _typeId,
+                          items: [
                             DropdownMenuItem<int>(
-                              value: -1,
-                              enabled: false,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    top: BorderSide(
-                                      color: Colors.orange,
-                                      width: 2.0,
+                              value: 0,
+                              child: Text('Catégorie'),
+                            ),
+                            ...groupedItemTypes.entries.expand((entry) {
+                              final superTypeName = entry.key;
+                              final types = entry.value;
+                              return [
+                                DropdownMenuItem<int>(
+                                  value: -1,
+                                  enabled: false,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        top: BorderSide(
+                                          color: Colors.orange,
+                                          width: 2.0,
+                                        ),
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      superTypeName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  superTypeName,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange,
+                                ...types.map(
+                                  (type) => DropdownMenuItem<int>(
+                                    value: type['id'],
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: 16.0,
+                                      ),
+                                      child: Text(type['name']['fr']),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            ...types.map(
-                              (type) => DropdownMenuItem<int>(
-                                value: type['id'],
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 16.0),
-                                  child: Text(type['name']['fr']),
+                              ];
+                            }),
+                          ],
+                          onChanged: _onTypeChanged,
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  labelText: 'Niveau minimum',
                                 ),
+                                keyboardType: TextInputType.number,
+                                onChanged: _onMinLevelChanged,
                               ),
                             ),
-                          ];
-                        }),
-                      ],
-                      onChanged: _onTypeChanged,
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              labelText: 'Niveau minimum',
+                            Expanded(
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  labelText: 'Niveau maximum',
+                                ),
+                                keyboardType: TextInputType.number,
+                                onChanged: _onMaxLevelChanged,
+                              ),
                             ),
-                            keyboardType: TextInputType.number,
-                            onChanged: _onMinLevelChanged,
-                          ),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              labelText: 'Niveau maximum',
-                            ),
-                            keyboardType: TextInputType.number,
-                            onChanged: _onMaxLevelChanged,
-                          ),
+                          ],
                         ),
                       ],
-                    ),
-                  ],
-                );
-              }
-            },
+                    );
+                  }
+                },
+              ),
+            ],
           ),
           Expanded(
             child: FutureBuilder<Map<String, dynamic>>(
@@ -204,7 +246,7 @@ class _PageItemState extends State<PageItem> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData ||
                     snapshot.data!['items'].isEmpty) {
-                  return Center(child: Text('No items found'));
+                  return Center(child: Text('Pas d\'objet trouvé'));
                 } else {
                   final items = snapshot.data!['items'];
                   return Column(

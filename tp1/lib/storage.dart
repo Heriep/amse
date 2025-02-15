@@ -25,7 +25,8 @@ class StorageService {
     }
     final cacheExpiryString = prefs.getString('cacheExpiry');
     if (cacheExpiryString != null) {
-      final cacheExpiryData = json.decode(cacheExpiryString) as Map<String, dynamic>;
+      final cacheExpiryData =
+          json.decode(cacheExpiryString) as Map<String, dynamic>;
       cacheExpiryData.forEach((key, value) {
         _cacheExpiry[key] = DateTime.parse(value);
       });
@@ -35,7 +36,9 @@ class StorageService {
   Future<void> _saveCache() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('cache', json.encode(_cache));
-    final cacheExpiryData = _cacheExpiry.map((key, value) => MapEntry(key, value.toIso8601String()));
+    final cacheExpiryData = _cacheExpiry.map(
+      (key, value) => MapEntry(key, value.toIso8601String()),
+    );
     prefs.setString('cacheExpiry', json.encode(cacheExpiryData));
   }
 
@@ -115,33 +118,43 @@ class StorageService {
     }
   }
 
-Future<Map<String, dynamic>> fetchItemsData(int typeId, int skip, int minLevel, int maxLevel) async {
-  //await _loadCache();
-  //final cacheKey = 'items_${typeId}_$skip';
-  //if (_cache.containsKey(cacheKey) && !_isCacheExpired(cacheKey)) {
-  //  return _cache[cacheKey];
-  //}
+  Future<Map<String, dynamic>> fetchItemsData(
+    int typeId,
+    int skip,
+    int minLevel,
+    int maxLevel,
+    String itemName,
+  ) async {
+    //await _loadCache();
+    //final cacheKey = 'items_${typeId}_$skip';
+    //if (_cache.containsKey(cacheKey) && !_isCacheExpired(cacheKey)) {
+    //  return _cache[cacheKey];
+    //}
 
-  final typeFilter = typeId == 0 ? '' : 'typeId[\$in][]=$typeId&';
-  final response = await http.get(
-    Uri.parse(
-      'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&${typeFilter}level[\$gte]=$minLevel&level[\$lte]=$maxLevel&\$skip=$skip&lang=fr',
-    ),
-  );
+    final typeFilter = typeId == 0 ? '' : 'typeId[\$in][]=$typeId&';
+    final nameFilter =
+        itemName.isEmpty
+            ? ''
+            : 'slug.fr[\$search]=${Uri.encodeComponent(itemName)}&';
+    final response = await http.get(
+      Uri.parse(
+        'https://api.dofusdb.fr/items?typeId[\$ne]=203&\$sort=-id&$nameFilter${typeFilter}level[\$gte]=$minLevel&level[\$lte]=$maxLevel&\$skip=$skip&lang=fr',
+      ),
+    );
 
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    final items = data['data'].toList();
-    final total = data['total'];
-    final result = {'items': items, 'total': total};
-    //_cache[cacheKey] = result;
-    //_cacheExpiry[cacheKey] = DateTime.now().add(cacheDuration);
-    //await _saveCache();
-    return result;
-  } else {
-    throw Exception('Failed to load items data');
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final items = data['data'].toList();
+      final total = data['total'];
+      final result = {'items': items, 'total': total};
+      //_cache[cacheKey] = result;
+      //_cacheExpiry[cacheKey] = DateTime.now().add(cacheDuration);
+      //await _saveCache();
+      return result;
+    } else {
+      throw Exception('Failed to load items data');
+    }
   }
-}
 
   Future<List<dynamic>> fetchItemTypes(int skip) async {
     await _loadCache();
