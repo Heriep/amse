@@ -339,7 +339,7 @@ class _PageItemState extends State<PageItem> {
                   return Column(
                     children: [
                       Text(
-                        'Nombre d\'items trouvés: ${snapshot.data!['total']}',
+                        'Nombre d\'objets trouvés: ${snapshot.data!['total']}',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       ListView.builder(
@@ -368,6 +368,9 @@ class _PageItemState extends State<PageItem> {
                                   child: Image.network(item['img']),
                                 ),
                                 title: Text(item['name']['fr']),
+                                subtitle: Text(
+                                  "${item['type']['name']['fr']} Niv. ${item['level']}",
+                                ),
                                 trailing: FutureBuilder<bool>(
                                   future: _storageService.isItemLiked(
                                     item['id'],
@@ -402,6 +405,16 @@ class _PageItemState extends State<PageItem> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text('Level: ${item['level']}'),
+                                        Text(
+                                          'Type: ${item['type']['name']['fr']}',
+                                        ),
+                                        Text(
+                                          'Description: ${item['description']['fr']}',
+                                        ),
+                                        // Text(
+                                        //   'Panoplie: ${item['itemSet']?['name']?['fr'] ?? 'N/A'}',
+                                        // ),
+
                                         // Add more item statistics here
                                       ],
                                     ),
