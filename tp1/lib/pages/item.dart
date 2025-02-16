@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tp1/widget/multiselectbutton.dart';
+import 'package:tp1/widget/item_card.dart'; // Importez le fichier item_card.dart
 import '../storage.dart';
 
 class PageItem extends StatefulWidget {
@@ -136,16 +137,6 @@ class _PageItemState extends State<PageItem> {
       _skip = newSkip;
       _data = _fetchItems();
     });
-  }
-
-  void _toggleLikeItem(int itemId) async {
-    final isLiked = await _storageService.isItemLiked(itemId);
-    if (isLiked) {
-      await _storageService.unlikeItem(itemId);
-    } else {
-      await _storageService.likeItem(itemId);
-    }
-    setState(() {});
   }
 
   @override
@@ -348,81 +339,7 @@ class _PageItemState extends State<PageItem> {
                         itemCount: items.length,
                         itemBuilder: (context, index) {
                           final item = items[index];
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              dividerColor: Colors.transparent,
-                              expansionTileTheme: ExpansionTileThemeData(
-                                tilePadding: EdgeInsets.zero,
-                                childrenPadding: EdgeInsets.zero,
-                              ),
-                            ),
-                            child: Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 4,
-                              margin: const EdgeInsets.all(8.0),
-                              child: ExpansionTile(
-                                leading: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Image.network(item['img']),
-                                ),
-                                title: Text(item['name']['fr']),
-                                subtitle: Text(
-                                  "${item['type']['name']['fr']} Niv. ${item['level']}",
-                                ),
-                                trailing: FutureBuilder<bool>(
-                                  future: _storageService.isItemLiked(
-                                    item['id'],
-                                  ),
-                                  builder: (context, likeSnapshot) {
-                                    if (likeSnapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Icon(Icons.favorite_border);
-                                    } else if (likeSnapshot.hasError) {
-                                      return Icon(Icons.error);
-                                    } else {
-                                      final isLiked =
-                                          likeSnapshot.data ?? false;
-                                      return IconButton(
-                                        icon: Icon(
-                                          isLiked
-                                              ? Icons.favorite
-                                              : Icons.favorite_border,
-                                          color: isLiked ? Colors.red : null,
-                                        ),
-                                        onPressed:
-                                            () => _toggleLikeItem(item['id']),
-                                      );
-                                    }
-                                  },
-                                ),
-                                children: [
-                                  ListTile(
-                                    title: Text('Statistiques de l\'objet'),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Level: ${item['level']}'),
-                                        Text(
-                                          'Type: ${item['type']['name']['fr']}',
-                                        ),
-                                        Text(
-                                          'Description: ${item['description']['fr']}',
-                                        ),
-                                        // Text(
-                                        //   'Panoplie: ${item['itemSet']?['name']?['fr'] ?? 'N/A'}',
-                                        // ),
-
-                                        // Add more item statistics here
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
+                          return ItemCard(item: item);
                         },
                       ),
                     ],

@@ -131,6 +131,21 @@ class StorageService {
       ),
     );
 
+    Future<Map<String, dynamic>> fetchCharacteristic(
+      int characteristicId,
+    ) async {
+      final response = await http.get(
+        Uri.parse(
+          'https://api.dofusdb.fr/characteristics/$characteristicId?lang=fr',
+        ),
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load characteristic data');
+      }
+    }
+
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final characteristics = (data['data'] as List).toList();
