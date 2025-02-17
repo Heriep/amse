@@ -38,6 +38,9 @@ class ItemCardState extends State<ItemCard> {
         final characteristic = await _fetchCharacteristic(
           effect['characteristic'],
         );
+        if (characteristic.isEmpty) {
+          continue; // Ignore characteristics that cannot be fetched
+        }
         final effectData = await _fetchEffect(effect['effectId']);
         effectsData.add({
           'characteristic': characteristic,
@@ -60,7 +63,7 @@ class ItemCardState extends State<ItemCard> {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to load characteristic data $characteristicId');
+      return {}; // Ignore characteristics that cannot be fetched
     }
   }
 
@@ -188,7 +191,13 @@ class ItemCardState extends State<ItemCard> {
                                         child: icon,
                                       ),
                                     SizedBox(width: 8),
-                                    Text('$description $cleanedDescription'),
+                                    Flexible(
+                                      child: Text(
+                                        '$description $cleanedDescription',
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
                                   ],
                                 );
                               }).toList(),

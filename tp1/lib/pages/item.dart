@@ -45,14 +45,6 @@ class _PageItemState extends State<PageItem> {
   }
 
   Future<Map<String, dynamic>> _fetchItems() async {
-    if (_typeId == 0 &&
-        _minLevel == 0 &&
-        _maxLevel == 200 &&
-        _itemName.isEmpty &&
-        _selectedCharacteristics.isEmpty) {
-      _totalItems = 0;
-      return {'items': [], 'total': 0};
-    }
     final result = await _storageService.fetchItemsData(
       _typeId,
       _skip,
@@ -355,7 +347,10 @@ class _PageItemState extends State<PageItem> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
-                      (_totalItems / 10).ceil(),
+                      (_totalItems / 10).ceil().clamp(
+                        0,
+                        99,
+                      ), // Limiter à 99 onglets
                       (index) => Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4.0),
                         child: GestureDetector(
