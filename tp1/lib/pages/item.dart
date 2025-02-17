@@ -339,7 +339,7 @@ class _PageItemState extends State<PageItem> {
                         itemCount: items.length,
                         itemBuilder: (context, index) {
                           final item = items[index];
-                          return ItemCard(item: item);
+                          return ItemCard(item: item, onFavoriteChanged: () {});
                         },
                       ),
                     ],

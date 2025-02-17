@@ -7,8 +7,13 @@ import '../storage.dart';
 
 class ItemCard extends StatefulWidget {
   final Map<String, dynamic> item;
+  final VoidCallback onFavoriteChanged;
 
-  const ItemCard({super.key, required this.item});
+  const ItemCard({
+    super.key,
+    required this.item,
+    required this.onFavoriteChanged,
+  });
 
   @override
   ItemCardState createState() => ItemCardState();
@@ -84,6 +89,7 @@ class ItemCardState extends State<ItemCard> {
       await storageService.likeItem(itemId);
     }
     setState(() {});
+    widget.onFavoriteChanged();
   }
 
   String _cleanDescription(String description) {

@@ -13,6 +13,8 @@ class PageHome extends StatefulWidget {
 }
 
 class PageHomeState extends State<PageHome> {
+  final ValueNotifier<bool> _favoritesUpdated = ValueNotifier(false);
+
   Future<List<int>> _fetchLikedItems() async {
     final storageService = StorageService();
     return await storageService.getLikedItems();
@@ -44,42 +46,53 @@ class PageHomeState extends State<PageHome> {
           ),
         ),
         Expanded(
-          child: FutureBuilder<List<int>>(
-            future: _fetchLikedItems(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('Pas de favoris'));
-              } else {
-                final likedItems = snapshot.data!;
-                return ListView.builder(
-                  itemCount: likedItems.length,
-                  itemBuilder: (context, index) {
-                    final itemId = likedItems[index];
-                    return FutureBuilder<Map<String, dynamic>?>(
-                      future: _fetchItemDetails(itemId),
-                      builder: (context, itemSnapshot) {
-                        if (itemSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        } else if (itemSnapshot.hasError) {
-                          return Center(
-                            child: Text('Error: ${itemSnapshot.error}'),
-                          );
-                        } else if (!itemSnapshot.hasData) {
-                          return Center(child: Text('Item non trouvé'));
-                        } else {
-                          final item = itemSnapshot.data!;
-                          return ItemCard(item: item);
-                        }
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _favoritesUpdated,
+            builder: (context, _, __) {
+              return FutureBuilder<List<int>>(
+                future: _fetchLikedItems(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('Pas de favoris'));
+                  } else {
+                    final likedItems = snapshot.data!;
+                    return ListView.builder(
+                      itemCount: likedItems.length,
+                      itemBuilder: (context, index) {
+                        final itemId = likedItems[index];
+                        return FutureBuilder<Map<String, dynamic>?>(
+                          future: _fetchItemDetails(itemId),
+                          builder: (context, itemSnapshot) {
+                            if (itemSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Center(child: CircularProgressIndicator());
+                            } else if (itemSnapshot.hasError) {
+                              return Center(
+                                child: Text('Error: ${itemSnapshot.error}'),
+                              );
+                            } else if (!itemSnapshot.hasData) {
+                              return Center(child: Text('Item non trouvé'));
+                            } else {
+                              final item = itemSnapshot.data!;
+                              return ItemCard(
+                                item: item,
+                                onFavoriteChanged: () {
+                                  _favoritesUpdated.value =
+                                      !_favoritesUpdated.value;
+                                },
+                              );
+                            }
+                          },
+                        );
                       },
                     );
-                  },
-                );
-              }
+                  }
+                },
+              );
             },
           ),
         ),

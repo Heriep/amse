@@ -5,6 +5,6 @@ class PageStuff extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Page 3'));
+    return const Center(child: Text('Work in progress'));
   }
 }
