@@ -39,7 +39,6 @@ class _MyHomePageState extends State<MyHomePage> {
   static const List<Widget> _pages = <Widget>[
     PageHome(),
     PageItem(),
-    PageStuff(),
     PageChallenges(),
   ];
 
@@ -104,10 +103,6 @@ class _MyHomePageState extends State<MyHomePage> {
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
             BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Objets'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.construction),
-              label: 'Equipements',
-            ),
             BottomNavigationBarItem(
               icon: Icon(Icons.emoji_events),
               label: 'Défis',

@@ -152,59 +152,90 @@ class ItemCardState extends State<ItemCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Effets:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: _effectsData,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children:
-                              snapshot.data!.map<Widget>((data) {
-                                final characteristic = data['characteristic'];
-                                final effectData = data['effectData'];
-                                final effect = data['effect'];
-                                final icon = getIcon(
-                                  characteristic['name']['fr'],
-                                  characteristic['categoryId'],
-                                );
-                                final description =
-                                    effect['to'] == 0
-                                        ? '${effect['from']}'
-                                        : '${effect['from']} à ${effect['to']}';
-                                final cleanedDescription = _cleanDescription(
-                                  effectData['description']['fr'],
-                                );
-                                return Row(
-                                  children: [
-                                    if (icon != null)
-                                      SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: icon,
-                                      ),
-                                    SizedBox(width: 8),
-                                    Flexible(
-                                      child: Text(
-                                        '$description $cleanedDescription',
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                        );
-                      }
-                    },
-                  ),
+                  if ([
+                    'Amulette',
+                    'Anneau',
+                    'Arc',
+                    'Arme magique',
+                    'Baguette',
+                    'Bâton',
+                    'Dague',
+                    'Faux',
+                    'Hache',
+                    'Lance',
+                    'Marteau',
+                    'Outil',
+                    'Pelle',
+                    'Pioche',
+                    'Épée',
+                    'Bouclier',
+                    'Ceinture',
+                    'Coiffe',
+                    'Bottes',
+                    'Arme',
+                    'Cape',
+                  ].contains(widget.item['type']['name']['fr']))
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Effets:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        FutureBuilder<List<Map<String, dynamic>>>(
+                          future: _effectsData,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return CircularProgressIndicator();
+                            } else if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            } else {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children:
+                                    snapshot.data!.map<Widget>((data) {
+                                      final characteristic =
+                                          data['characteristic'];
+                                      final effectData = data['effectData'];
+                                      final effect = data['effect'];
+                                      final icon = getIcon(
+                                        characteristic['name']['fr'],
+                                        characteristic['categoryId'],
+                                      );
+                                      final description =
+                                          effect['to'] == 0
+                                              ? '${effect['from']}'
+                                              : '${effect['from']} à ${effect['to']}';
+                                      final cleanedDescription =
+                                          _cleanDescription(
+                                            effectData['description']['fr'],
+                                          );
+                                      return Row(
+                                        children: [
+                                          if (icon != null)
+                                            SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: icon,
+                                            ),
+                                          SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              '$description $cleanedDescription',
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }).toList(),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   Text(""),
                   if (widget.item['itemSet'] is! bool)
                     Text(

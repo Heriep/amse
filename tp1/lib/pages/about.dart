@@ -21,7 +21,7 @@ class PageAbout extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Text(
-              'Version 0.1',
+              'Version 0.1.1',
               style: TextStyle(fontSize: 18, color: Colors.black54),
             ),
             SizedBox(height: 16),
