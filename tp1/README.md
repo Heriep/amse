@@ -45,9 +45,13 @@ flutter build apk --release
 
 ### Features
 
-- Search for items, equipment, and challenges.
-- View detailed information about each item.
-- Offline caching of data for faster access.
+### Features
+
+- **Search Functionality**: Quickly search for items and equipment within the app. Filter by name,category, level and effects.
+- **Detailed Information**: Access comprehensive details about each item, including stats, descriptions, and usage.
+- **Offline Caching**: Enjoy faster access to data with offline caching capabilities.
+- **Challenges Data**: Access detailed information about challenges.
+- **Almanax Data**: Fetch data for the Almanax daily quests, which require giving specific items to an NPC in the game.
 
 ### Contact
 
