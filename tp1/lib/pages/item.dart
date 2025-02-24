@@ -187,57 +187,60 @@ class _PageItemState extends State<PageItem> {
 
                         return Column(
                           children: [
-                            DropdownButton<int>(
-                              value: _typeId,
-                              items: [
-                                DropdownMenuItem<int>(
-                                  value: 0,
-                                  child: Text('Catégorie'),
-                                ),
-                                ...groupedItemTypes.entries.expand((entry) {
-                                  final superTypeName = entry.key;
-                                  final types = entry.value;
-                                  return [
-                                    DropdownMenuItem<int>(
-                                      value: -1,
-                                      enabled: false,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          border: Border(
-                                            top: BorderSide(
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DropdownButton<int>(
+                                value: _typeId,
+                                items: [
+                                  DropdownMenuItem<int>(
+                                    value: 0,
+                                    child: Text('Catégorie'),
+                                  ),
+                                  ...groupedItemTypes.entries.expand((entry) {
+                                    final superTypeName = entry.key;
+                                    final types = entry.value;
+                                    return [
+                                      DropdownMenuItem<int>(
+                                        value: -1,
+                                        enabled: false,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(
+                                                color: Colors.blue,
+                                                width: 2.0,
+                                              ),
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            superTypeName,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
                                               color: Colors.blue,
-                                              width: 2.0,
                                             ),
                                           ),
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0,
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          superTypeName,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.blue,
+                                      ),
+                                      ...types.map(
+                                        (type) => DropdownMenuItem<int>(
+                                          value: type['id'],
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 16.0,
+                                            ),
+                                            child: Text(type['name']['fr']),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    ...types.map(
-                                      (type) => DropdownMenuItem<int>(
-                                        value: type['id'],
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 16.0,
-                                          ),
-                                          child: Text(type['name']['fr']),
-                                        ),
-                                      ),
-                                    ),
-                                  ];
-                                }),
-                              ],
-                              onChanged: _onTypeChanged,
+                                    ];
+                                  }),
+                                ],
+                                onChanged: _onTypeChanged,
+                              ),
                             ),
                             Row(
                               children: [

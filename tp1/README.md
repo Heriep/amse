@@ -66,8 +66,4 @@ Certain illustrations are the property of Ankama Studio and Dofus - All rights r
 
 ### Version
 
-Current version: 0.1.1
-
-### Known Issues
-
-- CORS issue in Chrome: You cannot load some (not all) pictures in Chrome, but it works on Android.
+Current version: 0.1.2
