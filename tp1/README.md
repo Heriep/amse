@@ -16,7 +16,7 @@ Dofuspedia is an encyclopedia application for the game Dofus. It allows users to
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/tp1.git
+   git clone https://github.com/Heriep/amse.git
    ```
 2. Navigate to the project directory:
    ```sh
