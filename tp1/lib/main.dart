@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/home.dart';
 import 'pages/item.dart';
-import 'pages/stuff.dart';
 import 'pages/challenges.dart';
 import 'pages/about.dart';
 
